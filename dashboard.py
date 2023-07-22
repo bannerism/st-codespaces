@@ -14,7 +14,6 @@ st.set_page_config(
 )
 
 st.title(":male-technologist: Investor RFM")
-# st.markdown('<style>div.block-container{padding-top:3rem;}</style>',unsafe_allow_html=True)
 
 fl = st.file_uploader(":file_folder: Upload a file",type = (['csv']))
 if fl is not None:
