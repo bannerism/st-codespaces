@@ -13,15 +13,50 @@ st.set_page_config(
     layout = 'wide'
 )
 
+def unique_non_null(s):
+    return s.dropna().unique()
+
+def get_unique_values(df, field):
+    d = dict()
+    list_of_vals = []
+    for i,r in df.iterrows():
+        pi = r[field]
+        try:
+            vals = pi.split(', ')
+        except:
+            vals = [pi]
+        list_of_vals.append(vals)
+    
+    all_vals = list({x for l in list_of_vals for x in l})
+    d[field] = all_vals
+    
+    return d[field]
+
+def regexify(searchfor):
+    OR = "|"
+    query = [i for i in searchfor]
+    return OR.join(query)
+
+
 st.title(":male-technologist: Investor RFM")
 
-fl = st.file_uploader(":file_folder: Upload a file",type = (['csv']))
-if fl is not None:
-    filename = fl.name
+uploaded_file = st.file_uploader(":file_folder: Upload a file",type = (['csv']))
+if uploaded_file is not None:
+    filename = uploaded_file.name
     st.write(filename)
     df = pd.read_csv(filename, encoding = "ISO-8859-1")
 else:
     df = pd.read_csv("/workspaces/st-codespaces/techstars_interview_data_rfm.csv", encoding = "ISO-8859-1")
+
+# Create a preferred industry multiselect widget
+with st.form("Filter Dataframe"):
+    selected_names = st.multiselect(
+        "Find investors whose preferred industry is:",
+        get_unique_values(df,'Preferred Industry'),
+        # default=[" "],
+    )
+    submit_button = st.form_submit_button('Search')
+
 
 ## date picker
 col1, col2 = st.columns((2))
@@ -36,13 +71,18 @@ with col2:
     date2 = pd.to_datetime(st.date_input("End Date",endDate))
 
 df['value'] = 1
-df = df[(df['Order Date'] >= date1) & (df['Order Date'] <= date2)].copy()
+
+if submit_button:
+    # Filter the dataframe
+    s1 = df['Preferred Industry']
+    df = df[s1.str.contains(regexify(selected_names), na = False)].copy()
+    df = df[(df['Order Date'] >= date1) & (df['Order Date'] <= date2)].copy()
+else:
+    df = df[(df['Order Date'] >= date1) & (df['Order Date'] <= date2)].copy()
+
 
 ## side bar filters
 st.sidebar.header('Choose your filter: ')
-
-def unique_non_null(s):
-    return s.dropna().unique()
 
 region = st.sidebar.multiselect("HQ Global Region", unique_non_null(df['HQ Global Region']))
 if not region:
@@ -142,13 +182,14 @@ with st.expander("Learn More about RFM"):
 
                 """)
 fig = px.treemap(filtered_df, path=[px.Constant("All"),'Segment', 'Investors'], values='Last Investment Size',
-                  color='Primary Investor Type', hover_data=['Last Investment Type','Preferred Industry','Preferred Verticals'],
+                  color='Primary Investor Type', hover_data=['Recency Score','Frequency Score','Monetary Score','Last Investment Type','Preferred Industry','Preferred Verticals'],
                   color_continuous_scale='RdBu',
-                  color_continuous_midpoint=np.average(filtered_df['Recency Score'], weights=filtered_df['Monetary']))
+                #   color_continuous_midpoint=np.average(filtered_df['Recency Score'], weights=filtered_df['Monetary'])
+                )
 fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
 st.plotly_chart(fig,use_container_width=True)
 
-rfm = filtered_df.filter(['RFM Score','Investors','Primary Investor Type','Last Investment Delta','Total Investments','Monetary Score','Last Investment Size','Preferred Industry'])
+rfm = filtered_df.filter(['RFM Score','Investors','Primary Investor Type','Last Investment Delta','Total Investments','Last Investment Size','Preferred Industry'])
 with st.expander("Recency, Frequency and Monetary Data"):
 
         st.write(" ")
