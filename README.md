@@ -30,5 +30,5 @@ Fork this repo, open it on GitHub Codespaces, wait for the container to load, an
 If it weren't for the `.streamlit/config.toml` file, you would have had to run the following command:
 
 ```bash
-streamlit hello --server.enableCORS false --server.enableXsrfProtection false
+streamlit dashboard.py --server.enableCORS false --server.enableXsrfProtection false
 ```
