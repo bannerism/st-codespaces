@@ -88,7 +88,7 @@ category_df = filtered_df.groupby(by = ['Segment'], as_index = False)['Investors
 category_df = category_df.sort_values('Investors')
 
 with col1:
-    st.subheader("Count of Investors")
+    st.subheader("# of Investors")
     fig = px.bar(category_df, 
                  x = 'Segment',
                  y = 'Investors',
@@ -106,6 +106,7 @@ with col2:
 
     st.plotly_chart(fig,use_container_width=True)
 
+## Data Download
 cl1, cl2 = st.columns(2)
 with cl1:
     with st.expander("Segment ViewData"):
@@ -114,9 +115,46 @@ with cl1:
         st.download_button("Download Data", data = csv,
                             file_name = 'Segment_ViewData.csv',
                               mime = "text/csv",
-                                help = "Download CSV")
+                                help = "Click to Download CSV")
         
-# with cl2:
-#     with st.expander("Primary Investors"):
-        
-                           
+with cl2:
+    with st.expander("Investor ViewData"):
+        data = filtered_df.groupby(by = ['Segment','Primary Investor Type'], as_index = False)['Investors'].count()
+        st.write(data.style.background_gradient(cmap='Oranges'))
+        csv = data.to_csv(index = False).encode('utf-8')
+        st.download_button("Download Data", data = csv,
+                            file_name = 'Investor_ViewData.csv',
+                              mime = "text/csv",
+                                help = "Click to Download CSV")
+
+
+st.subheader("RFM Analysis")
+with st.expander("Learn More about RFM"):
+    st.markdown("""
+                Recency = `Last Investment Date` \n
+                Frequency = `Total Investments` \n
+                Monetary = `Last Investment Size` \n
+
+                RFM stands for Recency, Frequency, and Monetary Value. It is a customer segmentation technique that uses these three metrics to measure and analyze investor behavior.
+
+                - 111 is the lowest score while 555 is the highest score.
+                - Scores are determined by splitting the values of each metric into five equal groups.
+
+                """)
+fig = px.treemap(filtered_df, path=[px.Constant("All"),'Segment', 'Investors'], values='Last Investment Size',
+                  color='Primary Investor Type', hover_data=['Last Investment Type','Preferred Industry','Preferred Verticals'],
+                  color_continuous_scale='RdBu',
+                  color_continuous_midpoint=np.average(filtered_df['Recency Score'], weights=filtered_df['Monetary']))
+fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+st.plotly_chart(fig,use_container_width=True)
+
+rfm = filtered_df.filter(['RFM Score','Investors','Primary Investor Type','Last Investment Delta','Total Investments','Monetary Score','Last Investment Size','Preferred Industry'])
+with st.expander("Recency, Frequency and Monetary Data"):
+
+        st.write(" ")
+        st.write(rfm)
+        csv = rfm.to_csv(index = False).encode('utf-8')
+        st.download_button("Download Data", data = csv,
+                            file_name = 'RFM_Campaign.csv',
+                              mime = "text/csv",
+                                help = "Click to Download CSV")
