@@ -8,7 +8,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 st.set_page_config(
-    page_title='techstars_', 
+    page_title='RFM Analysis', 
     page_icon=':male-technologist:',
     layout = 'wide'
 )
@@ -57,6 +57,34 @@ with st.form("Filter Dataframe"):
     )
     submit_button = st.form_submit_button('Search')
 
+
+st.subheader("RFM Analysis")
+with st.expander("Learn More about RFM"):
+    st.markdown("""
+                Recency = `Last Investment Date` \n
+                Frequency = `Total Investments` \n
+                Monetary = `Last Investment Size` \n
+
+                RFM stands for Recency, Frequency, and Monetary Value. It is a customer segmentation technique that uses these three metrics to measure and analyze investor behavior.
+
+                ## Categories
+                1. Champions
+                1. Potential Loyalists
+                1. New Investors
+                1. Promising
+                1. Loyal Investors 
+                1. Needs Attention
+                1. About to Sleep
+                1. Can't Lose
+                1. At Risk
+                1. Hibernating
+
+                ## How it's Scored
+
+                - 111 is the lowest score (Hibernating) while 555 (Champion) is the highest score.
+                - Scores are determined by splitting the values of each metric into five equal groups.
+
+                """)
 
 ## date picker
 col1, col2 = st.columns((2))
@@ -127,6 +155,7 @@ else:
 category_df = filtered_df.groupby(by = ['Segment'], as_index = False)['Investors'].count()
 category_df = category_df.sort_values('Investors')
 
+
 with col1:
     st.subheader("# of Investors")
     fig = px.bar(category_df, 
@@ -146,6 +175,8 @@ with col2:
 
     st.plotly_chart(fig,use_container_width=True)
 
+
+    
 ## Data Download
 cl1, cl2 = st.columns(2)
 with cl1:
@@ -168,19 +199,7 @@ with cl2:
                                 help = "Click to Download CSV")
 
 
-st.subheader("RFM Analysis")
-with st.expander("Learn More about RFM"):
-    st.markdown("""
-                Recency = `Last Investment Date` \n
-                Frequency = `Total Investments` \n
-                Monetary = `Last Investment Size` \n
 
-                RFM stands for Recency, Frequency, and Monetary Value. It is a customer segmentation technique that uses these three metrics to measure and analyze investor behavior.
-
-                - 111 is the lowest score while 555 is the highest score.
-                - Scores are determined by splitting the values of each metric into five equal groups.
-
-                """)
 fig = px.treemap(filtered_df, path=[px.Constant("All"),'Segment', 'Investors'], values='Last Investment Size',
                   color='Primary Investor Type', hover_data=['Recency Score','Frequency Score','Monetary Score','Last Investment Type','Preferred Industry','Preferred Verticals'],
                   color_continuous_scale='RdBu',
